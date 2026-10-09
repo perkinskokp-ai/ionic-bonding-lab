@@ -70,6 +70,7 @@
 
         #sidebar {
             width: 320px;
+            flex-shrink: 0;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--card-border);
             padding: 30px 20px;
@@ -79,6 +80,58 @@
             gap: 20px;
             z-index: 10;
             box-shadow: var(--sidebar-shadow);
+            overflow: hidden;
+            transition: width 0.28s ease, padding 0.28s ease;
+        }
+
+        .sidebar-toggle {
+            align-self: flex-end;
+            width: 44px;
+            height: 44px;
+            flex: none;
+            border-radius: 12px;
+            border: 1px solid var(--ion-card-border);
+            background: var(--ion-card-bg);
+            color: var(--accent-blue);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+            touch-action: manipulation;
+        }
+
+        body.sidebar-collapsed #sidebar {
+            width: 76px;
+            padding: 16px 8px;
+            gap: 12px;
+        }
+
+        body.sidebar-collapsed #sidebar .sidebar-toggle {
+            align-self: center;
+        }
+
+        body.sidebar-collapsed #sidebar .logo-text,
+        body.sidebar-collapsed #sidebar .nav-label,
+        body.sidebar-collapsed #sidebar .stat-box,
+        body.sidebar-collapsed #sidebar .divider {
+            display: none !important;
+        }
+
+        body.sidebar-collapsed #sidebar .logo {
+            align-items: center !important;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        body.sidebar-collapsed #sidebar .lang-switcher {
+            flex-direction: column !important;
+        }
+
+        body.sidebar-collapsed #sidebar .nav-item {
+            justify-content: center;
+            padding: 14px 0;
         }
 
         .logo {
@@ -872,6 +925,15 @@
                 min-width: max-content;
             }
 
+            body.sidebar-collapsed #sidebar {
+                width: 100%;
+                padding: 8px 12px;
+            }
+
+            body.sidebar-collapsed #sidebar .lang-switcher {
+                flex-direction: row !important;
+            }
+
             #main-content {
                 padding: 12px;
             }
@@ -953,11 +1015,14 @@
 
     <!-- 1. 側邊導航欄 -->
     <div id="sidebar">
+        <button type="button" id="btn-sidebar-toggle" class="sidebar-toggle" aria-expanded="true" aria-label="Collapse sidebar">
+            <i class="fa-solid fa-angles-left" id="sidebar-toggle-icon"></i>
+        </button>
         <div class="logo" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-atom"></i>
-                <span class="lang-zh">離子化學拼圖</span>
-                <span class="lang-en" style="display:none;">Ionic Puzzle</span>
+                <span class="logo-text lang-zh">離子化學拼圖</span>
+                <span class="logo-text lang-en" style="display:none;">Ionic Puzzle</span>
             </div>
             <!-- 語言切換按鈕 (Language Switcher) -->
             <div class="lang-switcher" style="display: flex; gap: 5px; margin-top: 5px; width: 100%; -webkit-text-fill-color: initial !important; background-clip: initial !important; -webkit-background-clip: initial !important;">
@@ -968,18 +1033,18 @@
         
         <div class="nav-item active" id="nav-lab" onclick="switchTab('lab')">
             <i class="fa-solid fa-flask-vial"></i> 
-            <span class="lang-zh">實驗模擬室 (Lab)</span>
-            <span class="lang-en" style="display:none;">Synthesis Lab</span>
+            <span class="nav-label lang-zh">實驗模擬室 (Lab)</span>
+            <span class="nav-label lang-en" style="display:none;">Synthesis Lab</span>
         </div>
         <div class="nav-item" id="nav-quest" onclick="switchTab('quest')">
             <i class="fa-solid fa-trophy"></i> 
-            <span class="lang-zh">挑戰闖關區 (Quest)</span>
-            <span class="lang-en" style="display:none;">Quest Mode</span>
+            <span class="nav-label lang-zh">挑戰闖關區 (Quest)</span>
+            <span class="nav-label lang-en" style="display:none;">Quest Mode</span>
         </div>
         <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">
             <i class="fa-solid fa-sliders"></i> 
-            <span class="lang-zh">離子資料庫 (Settings)</span>
-            <span class="lang-en" style="display:none;">Ion Database</span>
+            <span class="nav-label lang-zh">離子資料庫 (Settings)</span>
+            <span class="nav-label lang-en" style="display:none;">Ion Database</span>
         </div>
 
         <div class="divider"></div>
@@ -3098,9 +3163,58 @@
             container.appendChild(svg);
         }
 
+        function applySidebarCollapsed(collapsed) {
+            document.body.classList.toggle('sidebar-collapsed', collapsed);
+            var btn = document.getElementById('btn-sidebar-toggle');
+            var icon = document.getElementById('sidebar-toggle-icon');
+            if (btn) {
+                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+            }
+            if (icon) icon.className = collapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+        }
+
+        function resizeCanvasSoon() {
+            if (typeof resizeCanvas === 'function') resizeCanvas();
+            setTimeout(function() {
+                if (typeof resizeCanvas === 'function') resizeCanvas();
+            }, 320);
+        }
+
+        function toggleSidebar() {
+            var collapsed = !document.body.classList.contains('sidebar-collapsed');
+            applySidebarCollapsed(collapsed);
+            try { localStorage.setItem('ipl-sidebar-collapsed', collapsed ? '1' : '0'); } catch (e) {}
+            resizeCanvasSoon();
+        }
+
+        function bindSidebarToggle() {
+            var btn = document.getElementById('btn-sidebar-toggle');
+            if (!btn || btn.dataset.touchBound === '1') return;
+            btn.dataset.touchBound = '1';
+            var lock = false;
+            function run() {
+                if (lock) return;
+                lock = true;
+                toggleSidebar();
+                setTimeout(function() { lock = false; }, 400);
+            }
+            btn.addEventListener('touchend', function(event) {
+                if (event.cancelable) event.preventDefault();
+                run();
+            }, { passive: false });
+            btn.addEventListener('click', run);
+            try {
+                if (localStorage.getItem('ipl-sidebar-collapsed') === '1') {
+                    applySidebarCollapsed(true);
+                }
+            } catch (e) {}
+        }
+
         window.onload = function() {
             initLabLangBridge();
             bindStayStudyButton();
+            bindSidebarToggle();
             resizeCanvas();
         };
 
