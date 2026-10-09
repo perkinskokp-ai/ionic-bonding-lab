@@ -521,6 +521,13 @@
             transform: translateY(1px);
         }
 
+        @media (hover: none), (pointer: coarse) {
+            .cyber-btn:hover,
+            .cyber-btn:active {
+                transform: none;
+            }
+        }
+
         .cyber-btn-gold {
             background: linear-gradient(135deg, var(--accent-gold), #ea580c);
             box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);
@@ -573,6 +580,19 @@
         .modal-card.active {
             transform: scale(1);
             opacity: 1;
+        }
+
+        @media (hover: none), (pointer: coarse) {
+            .modal-card,
+            .modal-card.active {
+                transform: none;
+                opacity: 1;
+            }
+
+            #btn-stay-study,
+            #btn-next-level {
+                touch-action: manipulation;
+            }
         }
 
         .modal-card h2 {
@@ -2240,8 +2260,19 @@
         function closeSuccessModal() {
             var overlay = document.getElementById('success-modal');
             var card = document.getElementById('success-modal-card');
+            if (!overlay || !card) return;
             card.classList.remove('active');
-            setTimeout(function() { overlay.style.display = 'none'; }, 300);
+            overlay.style.display = 'none';
+        }
+
+        function bindStayStudyButton() {
+            var stay = document.getElementById('btn-stay-study');
+            if (!stay || stay.dataset.touchBound === '1') return;
+            stay.dataset.touchBound = '1';
+            stay.addEventListener('pointerup', function(event) {
+                event.preventDefault();
+                closeSuccessModal();
+            });
         }
 
         function nextQuestLevel() {
@@ -2999,6 +3030,7 @@
 
         window.onload = function() {
             initLabLangBridge();
+            bindStayStudyButton();
             resizeCanvas();
         };
 
