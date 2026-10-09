@@ -561,6 +561,7 @@
         }
 
         .modal-card {
+            position: relative;
             background: var(--sidebar-bg);
             border: 2px solid var(--accent-blue);
             border-radius: 20px;
@@ -590,7 +591,8 @@
             }
 
             #btn-stay-study,
-            #btn-next-level {
+            #btn-next-level,
+            #btn-modal-close {
                 touch-action: manipulation;
             }
         }
@@ -600,7 +602,27 @@
             color: var(--accent-blue);
             font-size: 2em;
             margin-top: 0;
+            padding: 0 40px;
             text-shadow: none;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--text-main);
+            cursor: pointer;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15em;
+            touch-action: manipulation;
         }
 
         .modal-formula {
@@ -995,10 +1017,6 @@
                             <span class="lang-zh">清除全部</span>
                             <span class="lang-en" style="display:none;">Clear All</span>
                         </button>
-                        <div style="font-size:0.85em; color:var(--text-secondary); text-align:center;">
-                            <span class="lang-zh">點擊離子卡片加入反應室，雙擊反應室中的離子將其移除</span>
-                            <span class="lang-en" style="display:none;">Click ion card to add, double click in vessel to remove</span>
-                        </div>
                         <button class="cyber-btn" id="btn-synthesize" onclick="checkSynthesis()">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> 
                             <span class="lang-zh">點擊合成</span>
@@ -1146,6 +1164,9 @@
     <!-- 3. 合成成功彊出視窗 (Modal) -->
     <div class="modal-overlay" id="success-modal">
         <div class="modal-card" id="success-modal-card">
+            <button type="button" class="modal-close" id="btn-modal-close" aria-label="Close" onclick="closeSuccessModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <h2 id="modal-title"><i class="fa-solid fa-circle-check pulse"></i> 合成成功！</h2>
             <div id="modal-compound-name" style="font-size:1.8em; font-weight:bold; margin-bottom:10px;">硫酸銅 (Copper(II) Sulphate)</div>
             
@@ -2266,12 +2287,14 @@
         }
 
         function bindStayStudyButton() {
-            var stay = document.getElementById('btn-stay-study');
-            if (!stay || stay.dataset.touchBound === '1') return;
-            stay.dataset.touchBound = '1';
-            stay.addEventListener('pointerup', function(event) {
-                event.preventDefault();
-                closeSuccessModal();
+            ['btn-stay-study', 'btn-modal-close'].forEach(function(id) {
+                var btn = document.getElementById(id);
+                if (!btn || btn.dataset.touchBound === '1') return;
+                btn.dataset.touchBound = '1';
+                btn.addEventListener('pointerup', function(event) {
+                    event.preventDefault();
+                    closeSuccessModal();
+                });
             });
         }
 
