@@ -1376,7 +1376,7 @@
         ];
 
         var dbAnions = [
-            { id: "a1", name: "Hydride ion", nameZh: "氫負離子", sym: "H", charge: 1, poly: false },
+            { id: "a1", name: "Hydride ion", nameZh: "氫陰離子", sym: "H", charge: 1, poly: false },
             { id: "a2", name: "Hydroxide ion", nameZh: "氫氧根離子", sym: "OH", charge: 1, poly: true },
             { id: "a3", name: "Chloride ion", nameZh: "氯離子", sym: "Cl", charge: 1, poly: false },
             { id: "a4", name: "Bromide ion", nameZh: "溴離子", sym: "Br", charge: 1, poly: false },
@@ -2288,7 +2288,7 @@
                     anionPart = anionName.replace('根離子', '');
                 }
             } else if (anionName.endsWith('離子')) {
-                if (anionName === '氫負離子') {
+                if (anionName === '氫陰離子') {
                     anionPart = '氫化';
                 } else if (anionName === '氧離子') {
                     anionPart = '氧化';
