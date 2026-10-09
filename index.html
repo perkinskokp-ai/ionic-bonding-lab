@@ -562,13 +562,15 @@
 
         .modal-card {
             position: relative;
+            display: flex;
+            flex-direction: column;
             background: var(--sidebar-bg);
             border: 2px solid var(--accent-blue);
             border-radius: 20px;
             width: 100%;
             max-width: 680px;
             max-height: calc(100dvh - 40px);
-            overflow-y: auto;
+            overflow: hidden;
             padding: 30px;
             box-sizing: border-box;
             box-shadow: 0 10px 40px rgba(0, 102, 204, 0.15);
@@ -604,6 +606,27 @@
             margin-top: 0;
             padding: 0 40px;
             text-shadow: none;
+        }
+
+        .modal-card-body {
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal-card-actions {
+            flex: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-top: 16px;
+            background: var(--sidebar-bg);
+        }
+
+        .modal-card-actions .cyber-btn {
+            min-height: 44px;
+            touch-action: manipulation;
         }
 
         .modal-close {
@@ -1164,10 +1187,11 @@
     <!-- 3. 合成成功彊出視窗 (Modal) -->
     <div class="modal-overlay" id="success-modal">
         <div class="modal-card" id="success-modal-card">
-            <button type="button" class="modal-close" id="btn-modal-close" aria-label="Close" onclick="closeSuccessModal()">
+            <button type="button" class="modal-close" id="btn-modal-close" aria-label="Close">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <h2 id="modal-title"><i class="fa-solid fa-circle-check pulse"></i> 合成成功！</h2>
+            <div class="modal-card-body">
             <div id="modal-compound-name" style="font-size:1.8em; font-weight:bold; margin-bottom:10px;">硫酸銅 (Copper(II) Sulphate)</div>
             
             <div class="modal-formula" id="modal-formula-latex"></div>
@@ -1178,13 +1202,14 @@
                     <!-- SVG diagram will be rendered dynamically here -->
                 </div>
             </div>
+            </div>
 
-            <div style="display:flex; justify-content:center; gap:15px;">
-                <button class="cyber-btn cyber-btn-secondary" id="btn-stay-study" onclick="closeSuccessModal()">
+            <div class="modal-card-actions">
+                <button type="button" class="cyber-btn cyber-btn-secondary" id="btn-stay-study">
                     <span class="lang-zh">留在這研究</span>
                     <span class="lang-en" style="display:none;">Stay Here to Study</span>
                 </button>
-                <button class="cyber-btn" id="btn-next-level" onclick="nextQuestLevel()">
+                <button type="button" class="cyber-btn" id="btn-next-level">
                     <span class="lang-zh">下一關挑戰 <i class="fa-solid fa-chevron-right"></i></span>
                     <span class="lang-en" style="display:none;">Next Level Challenge <i class="fa-solid fa-chevron-right"></i></span>
                 </button>
@@ -2286,14 +2311,36 @@
             overlay.style.display = 'none';
         }
 
+        var modalActionLock = false;
+
+        function runModalAction(fn) {
+            if (modalActionLock) return;
+            modalActionLock = true;
+            fn();
+            setTimeout(function() { modalActionLock = false; }, 500);
+        }
+
         function bindStayStudyButton() {
-            ['btn-stay-study', 'btn-modal-close'].forEach(function(id) {
-                var btn = document.getElementById(id);
+            var actions = [
+                { id: 'btn-stay-study', run: closeSuccessModal },
+                { id: 'btn-modal-close', run: closeSuccessModal },
+                { id: 'btn-next-level', run: nextQuestLevel }
+            ];
+            actions.forEach(function(item) {
+                var btn = document.getElementById(item.id);
                 if (!btn || btn.dataset.touchBound === '1') return;
                 btn.dataset.touchBound = '1';
-                btn.addEventListener('pointerup', function(event) {
-                    event.preventDefault();
-                    closeSuccessModal();
+                btn.addEventListener('touchend', function(event) {
+                    var touch = event.changedTouches && event.changedTouches[0];
+                    if (!touch) return;
+                    var rect = btn.getBoundingClientRect();
+                    var inside = touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom;
+                    if (!inside) return;
+                    if (event.cancelable) event.preventDefault();
+                    runModalAction(item.run);
+                }, { passive: false });
+                btn.addEventListener('click', function() {
+                    runModalAction(item.run);
                 });
             });
         }
